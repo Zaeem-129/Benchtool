@@ -1,0 +1,808 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Benchtool – Free Online Tools</title>
+<meta name="description" content="Free word counter, JSON formatter, QR code generator, image compressor, image resizer, PDF merge, image to PDF and password generator. Everything runs in your browser.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;700;800&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --page:#070707; --surface:rgba(255,255,255,.05); --bg:rgba(255,255,255,.06);
+  --ink:#f5f2f2; --muted:#a79c9e; --line:rgba(255,255,255,.12);
+  --accent:#ff3b4a; --accent2:#ff7a59; --on-grad:#fff; --soft:rgba(255,59,74,.2);
+  --ok:#4ade9f; --err:#ff8a94; --r:20px;
+  --grad:linear-gradient(135deg,#e11d2e,#ff4d4d); --glow:0 8px 28px -8px rgba(255,45,63,.75);
+}
+[data-theme="light"]{
+  --page:#fff5f5; --surface:rgba(255,255,255,.8); --bg:rgba(120,10,20,.05);
+  --ink:#1a0a0c; --muted:#6d5558; --line:rgba(120,10,20,.14);
+  --accent:#c8101f; --accent2:#e8441f; --on-grad:#fff; --soft:rgba(200,16,31,.12);
+  --ok:#0f8a5a; --err:#b4232f;
+  --grad:linear-gradient(135deg,#c8101f,#ef3b3b); --glow:0 8px 24px -8px rgba(200,16,31,.55);
+}
+*{box-sizing:border-box;margin:0}
+html{scroll-behavior:smooth}
+body{font-family:'DM Sans',system-ui,sans-serif;background:var(--page);color:var(--ink);line-height:1.55;min-height:100vh;overflow-x:hidden}
+h1,h2,.brand{font-family:'Bricolage Grotesque','DM Sans',sans-serif;letter-spacing:-.025em}
+button,input,textarea,select{font:inherit;color:inherit}
+:focus-visible{outline:3px solid var(--accent2);outline-offset:2px}
+
+.aurora{position:fixed;inset:0;z-index:-1;overflow:hidden;pointer-events:none}
+.aurora::before,.aurora::after{content:"";position:absolute;width:62vmax;height:62vmax;border-radius:50%;filter:blur(100px)}
+.aurora::before{background:#e11d2e;opacity:.38;top:-28vmax;left:-18vmax;animation:drift 24s ease-in-out infinite alternate}
+.aurora::after{background:#8a0f1d;opacity:.4;bottom:-34vmax;right:-22vmax;animation:drift 30s ease-in-out infinite alternate-reverse}
+[data-theme="light"] .aurora::before{opacity:.22}
+[data-theme="light"] .aurora::after{opacity:.18}
+@keyframes drift{to{transform:translate(7vmax,5vmax) scale(1.12)}}
+
+header{position:sticky;top:12px;z-index:10;padding:0 12px}
+.bar{max-width:1100px;margin:auto;padding:7px 8px 7px 14px;display:flex;align-items:center;gap:12px;background:var(--surface);backdrop-filter:blur(20px) saturate(140%);-webkit-backdrop-filter:blur(20px) saturate(140%);border:1px solid var(--line);border-radius:999px;box-shadow:0 12px 40px -16px rgba(0,0,0,.55)}
+.brand{font-weight:800;font-size:1.2rem;display:flex;align-items:center;gap:8px;white-space:nowrap}
+.logo{width:30px;height:30px;border-radius:10px;background:var(--grad);display:grid;place-items:center;color:var(--on-grad);font-size:.95rem}
+.tabs{flex:1;display:flex;gap:4px;overflow-x:auto;scrollbar-width:none;padding:2px}
+.tabs::-webkit-scrollbar{display:none}
+.tab{display:flex;align-items:center;gap:7px;padding:8px 14px;border:0;background:none;border-radius:999px;cursor:pointer;white-space:nowrap;font-weight:500;color:var(--muted);transition:background .2s,color .2s}
+.tab:hover{background:var(--bg);color:var(--ink)}
+.tab[aria-selected="true"]{background:var(--grad);color:var(--on-grad);font-weight:700;box-shadow:var(--glow)}
+.tab i{font-style:normal;font-size:1rem}
+.theme{width:38px;height:38px;border-radius:50%;border:1px solid var(--line);background:var(--bg);cursor:pointer;font-size:1rem;flex:none}
+.theme:hover{background:var(--soft)}
+
+.hero{max-width:1100px;margin:auto;padding:64px 20px 34px;text-align:center}
+.hero h1{font-size:clamp(2.2rem,6vw,4rem);line-height:1.05;max-width:16ch;margin:auto;background:linear-gradient(120deg,var(--ink) 35%,var(--accent) 70%,var(--accent2));-webkit-background-clip:text;background-clip:text;color:transparent}
+.hero p{color:var(--muted);margin:16px auto 0;max-width:50ch;font-size:1.05rem}
+
+.app{max-width:860px;margin:auto;padding:8px 16px 60px}
+main{background:var(--surface);backdrop-filter:blur(22px);-webkit-backdrop-filter:blur(22px);border:1px solid var(--line);border-radius:28px;padding:30px;min-height:420px;box-shadow:0 40px 90px -40px rgba(0,0,0,.7)}
+.panel{display:none}
+.panel.on{display:block;animation:rise .35s ease}
+@keyframes rise{from{opacity:0;transform:translateY(10px)}}
+.panel h2{font-size:1.8rem}
+.panel>p{color:var(--muted);margin:4px 0 20px}
+label{display:block;font-weight:700;font-size:.9rem;margin:14px 0 6px}
+textarea,input[type=text],input[type=url],input[type=number],select{width:100%;padding:13px 15px;border:1px solid var(--line);border-radius:14px;background:var(--bg);resize:vertical;transition:border-color .15s,box-shadow .15s}
+select option{color:#1a0a0c}
+textarea{min-height:200px;line-height:1.5}
+textarea:focus,input:focus,select:focus{border-color:var(--accent);box-shadow:0 0 0 4px var(--soft);outline:none}
+input[type=range]{accent-color:var(--accent)}
+.row{display:flex;flex-wrap:wrap;gap:10px;margin-top:16px;align-items:center}
+.btn{padding:11px 20px;border-radius:999px;border:1px solid var(--line);background:var(--bg);cursor:pointer;font-weight:700;transition:transform .12s,background .2s,box-shadow .2s}
+.btn:hover{background:var(--soft)}.btn:active{transform:scale(.96)}
+.btn.primary{background:var(--grad);color:var(--on-grad);border-color:transparent;box-shadow:var(--glow)}
+.btn.primary:hover{filter:brightness(1.1);background:var(--grad)}
+.btn[disabled]{opacity:.4;pointer-events:none}
+
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;margin-bottom:16px}
+.stat{background:var(--bg);border:1px solid var(--line);border-radius:16px;padding:14px 16px}
+.stat b{display:block;font-family:'Bricolage Grotesque',sans-serif;font-size:1.8rem;line-height:1.1}
+.stat span{color:var(--muted);font-size:.85rem}
+
+.msg{margin-top:12px;font-weight:500;min-height:1.4em}
+.msg.ok{color:var(--ok)}.msg.err{color:var(--err)}
+.split{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+#qr-out{display:grid;place-items:center;min-height:280px;background:var(--bg);border:1px solid var(--line);border-radius:18px;padding:16px}
+#qr-out canvas{display:none}
+#qr-out img{background:#fff;padding:12px;border-radius:14px}
+.hint{color:var(--muted)}
+.drop{display:block;border:2px dashed var(--line);border-radius:18px;padding:34px;text-align:center;cursor:pointer;color:var(--muted);transition:border-color .2s,background .2s}
+.drop:hover,.drop.over{border-color:var(--accent);background:var(--soft)}
+.drop input{display:none}
+.img-res{display:none;margin-top:18px}
+.img-res img{max-width:100%;max-height:260px;border-radius:14px;display:block;margin:10px 0}
+input[type=checkbox]{accent-color:var(--accent);width:auto}
+
+.files{list-style:none;padding:0;margin-top:14px;display:grid;gap:8px}
+.files li{display:flex;align-items:center;gap:10px;background:var(--bg);border:1px solid var(--line);border-radius:14px;padding:8px 12px}
+.files .nm{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:500}
+.files small{color:var(--muted)}
+.files button{border:1px solid var(--line);background:var(--bg);border-radius:10px;width:32px;height:32px;cursor:pointer}
+.files button:hover{background:var(--soft)}
+
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(270px,1fr));gap:10px;margin-bottom:6px}
+.cc{display:flex;gap:12px;align-items:center;background:var(--bg);border:1px solid var(--line);border-radius:16px;padding:14px 16px;text-decoration:none;color:inherit;transition:background .2s,transform .12s}
+.cc:hover{background:var(--soft)}.cc:active{transform:scale(.98)}
+.cc small{color:var(--muted)}.cc b{overflow-wrap:anywhere}
+.ci{font-size:1.5rem}
+input[type=email]{width:100%;padding:13px 15px;border:1px solid var(--line);border-radius:14px;background:var(--bg);transition:border-color .15s,box-shadow .15s}
+input[type=email]:focus{border-color:var(--accent);box-shadow:0 0 0 4px var(--soft);outline:none}
+.hp{position:absolute;left:-9999px;width:1px;height:1px;opacity:0}
+.files img{width:38px;height:38px;object-fit:cover;border-radius:8px;flex:none}
+.pwbox{display:flex;gap:10px}
+.pwbox input{flex:1;min-width:0;width:auto;font-family:ui-monospace,Consolas,monospace;font-size:1.1rem;letter-spacing:.02em}
+.meter{height:8px;background:var(--bg);border:1px solid var(--line);border-radius:8px;margin-top:12px;overflow:hidden}
+.meter span{display:block;height:100%;width:0;transition:width .25s,background .25s}
+.opts{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:2px 16px;margin-top:4px}
+.opts label{display:flex;gap:8px;align-items:center;font-weight:500;margin:6px 0}
+.checks{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+.chk{padding:4px 12px;border-radius:999px;font-size:.85rem;border:1px solid var(--line);background:var(--bg);color:var(--muted)}
+.chk.ok{color:var(--ok);border-color:var(--ok);background:transparent;font-weight:700}
+footer{text-align:center;color:var(--muted);padding:0 20px 36px;font-size:.9rem}
+#toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(30px);background:var(--ink);color:var(--page);padding:10px 18px;border-radius:30px;opacity:0;transition:.25s;pointer-events:none}
+#toast.show{opacity:1;transform:translateX(-50%)}
+
+@media(max-width:700px){
+  .brand span:last-child{display:none}
+  .tab{padding:8px 12px}
+  .split{grid-template-columns:1fr}
+  main{padding:20px;border-radius:22px}
+  .hero{padding-top:44px}
+}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important;scroll-behavior:auto!important}}
+</style>
+</head>
+<body>
+<div class="aurora" aria-hidden="true"></div>
+
+<header><div class="bar">
+  <div class="brand"><span class="logo">⚒</span><span>Benchtool</span></div>
+  <nav class="tabs" role="tablist" aria-label="Tools">
+      <button class="tab" role="tab" data-tool="words" data-name="word counter text characters"><i>✍️</i>Word Counter</button>
+      <button class="tab" role="tab" data-tool="json" data-name="json formatter validator minify"><i>{ }</i>JSON Formatter</button>
+      <button class="tab" role="tab" data-tool="qr" data-name="qr code generator"><i>▦</i>QR Code Generator</button>
+      <button class="tab" role="tab" data-tool="image" data-name="image compressor photo size reduce"><i>🖼️</i>Image Compressor</button>
+      <button class="tab" role="tab" data-tool="resize" data-name="image resizer width height dimensions"><i>📐</i>Image Resizer</button>
+      <button class="tab" role="tab" data-tool="pdf" data-name="pdf merge combine join"><i>📄</i>PDF Merge</button>
+      <button class="tab" role="tab" data-tool="imgpdf" data-name="image to pdf convert photos jpg png"><i>🧾</i>Image to PDF</button>
+      <button class="tab" role="tab" data-tool="password" data-name="password generator random secure"><i>🔐</i>Password Generator</button>
+      <button class="tab" role="tab" data-tool="contact" data-name="contact review feedback problem"><i>✉️</i>Contact</button>
+    </nav>
+  <button class="theme" id="theme" aria-label="Switch light or dark theme">☀️</button>
+</div></header>
+
+<section class="hero">
+  <h1>Everyday tools, right in your browser.</h1>
+  <p>Count words, format JSON, make QR codes, compress and resize images, merge PDFs, turn images into PDF and create strong passwords. Your text and files stay on your device.</p>
+</section>
+
+<div class="app">
+
+  <main>
+    <!-- WORD COUNTER -->
+    <section class="panel" id="words">
+      <h2>Word Counter</h2>
+      <p>Paste or type your text. Works with English and Urdu.</p>
+      <div class="stats">
+        <div class="stat"><b id="w-words">0</b><span>Words</span></div>
+        <div class="stat"><b id="w-chars">0</b><span>Characters</span></div>
+        <div class="stat"><b id="w-nospace">0</b><span>Without spaces</span></div>
+        <div class="stat"><b id="w-sent">0</b><span>Sentences</span></div>
+        <div class="stat"><b id="w-para">0</b><span>Paragraphs</span></div>
+        <div class="stat"><b id="w-read">0 min</b><span>Reading time</span></div>
+      </div>
+      <textarea id="w-in" dir="auto" placeholder="Start typing or paste your text here…" aria-label="Text"></textarea>
+      <div class="row">
+        <button class="btn" id="w-copy">Copy text</button>
+        <button class="btn" id="w-clear">Clear</button>
+      </div>
+    </section>
+
+    <!-- JSON FORMATTER -->
+    <section class="panel" id="json">
+      <h2>JSON Formatter</h2>
+      <p>Validate, beautify or minify JSON in one click.</p>
+      <label for="j-in">Your JSON</label>
+      <textarea id="j-in" spellcheck="false" placeholder='{"name":"Zaeem","skills":["AI","Web"]}'></textarea>
+      <div class="row">
+        <button class="btn primary" id="j-format">Format</button>
+        <button class="btn" id="j-min">Minify</button>
+        <button class="btn" id="j-copy">Copy result</button>
+        <button class="btn" id="j-clear">Clear</button>
+      </div>
+      <div class="msg" id="j-msg" role="status"></div>
+    </section>
+
+    <!-- QR CODE -->
+    <section class="panel" id="qr">
+      <h2>QR Code Generator</h2>
+      <p>Turn any link or text into a QR code you can download.</p>
+      <div class="split">
+        <div>
+          <label for="q-in">Link or text</label>
+          <input type="text" id="q-in" placeholder="https://example.com">
+          <label for="q-size">Size</label>
+          <select id="q-size">
+            <option value="200">Small (200 px)</option>
+            <option value="300" selected>Medium (300 px)</option>
+            <option value="500">Large (500 px)</option>
+          </select>
+          <div class="row">
+            <button class="btn primary" id="q-make">Generate QR code</button>
+            <button class="btn" id="q-dl" disabled>Download PNG</button>
+          </div>
+          <div class="msg" id="q-msg" role="status"></div>
+        </div>
+        <div id="qr-out"><span class="hint">Your QR code will appear here</span></div>
+      </div>
+    </section>
+
+    <!-- IMAGE COMPRESSOR -->
+    <section class="panel" id="image">
+      <h2>Image Compressor</h2>
+      <p>Reduce the file size of JPG, PNG or WebP images without uploading them anywhere.</p>
+      <label class="drop" id="drop">
+        <input type="file" id="i-file" accept="image/*">
+        <strong>Tap to choose an image</strong><br>or drag and drop it here
+      </label>
+      <div class="img-res" id="i-res">
+        <label for="i-q">Quality: <span id="i-qv">70</span>%</label>
+        <input type="range" id="i-q" min="10" max="95" value="70" style="width:100%">
+        <label for="i-w">Max width</label>
+        <select id="i-w">
+          <option value="0">Keep original</option>
+          <option value="1920">1920 px</option>
+          <option value="1280" selected>1280 px</option>
+          <option value="800">800 px</option>
+        </select>
+        <div class="stats" style="margin-top:16px">
+          <div class="stat"><b id="i-before">–</b><span>Original</span></div>
+          <div class="stat"><b id="i-after">–</b><span>Compressed</span></div>
+          <div class="stat"><b id="i-save">–</b><span>Saved</span></div>
+        </div>
+        <img id="i-prev" alt="Compressed preview">
+        <div class="row"><a class="btn primary" id="i-dl" download="compressed.jpg" style="text-decoration:none">Download image</a></div>
+      </div>
+    </section>
+
+    <!-- IMAGE RESIZER -->
+    <section class="panel" id="resize">
+      <h2>Image Resizer</h2>
+      <p>Change the width and height of any image. Nothing is uploaded.</p>
+      <label class="drop" id="r-drop">
+        <input type="file" id="r-file" accept="image/*">
+        <strong>Tap to choose an image</strong><br>or drag and drop it here
+      </label>
+      <div class="img-res" id="r-res">
+        <div class="stat" style="margin-top:4px"><b id="r-orig">–</b><span>Original size (px)</span></div>
+        <div class="split">
+          <div><label for="r-w">Width (px)</label><input type="number" id="r-w" min="1" max="8000"></div>
+          <div><label for="r-h">Height (px)</label><input type="number" id="r-h" min="1" max="8000"></div>
+        </div>
+        <label style="display:flex;gap:8px;align-items:center;font-weight:500"><input type="checkbox" id="r-lock" checked> Keep aspect ratio</label>
+        <label for="r-fmt">Save as</label>
+        <select id="r-fmt">
+          <option value="image/png">PNG</option>
+          <option value="image/jpeg">JPG</option>
+          <option value="image/webp">WebP</option>
+        </select>
+        <div class="stats" style="margin-top:16px">
+          <div class="stat"><b id="r-new">–</b><span>New size (px)</span></div>
+          <div class="stat"><b id="r-fs">–</b><span>File size</span></div>
+        </div>
+        <img id="r-prev" alt="Resized preview">
+        <div class="row"><a class="btn primary" id="r-dl" download="resized.png" style="text-decoration:none">Download image</a></div>
+      </div>
+    </section>
+
+    <!-- PDF MERGE -->
+    <section class="panel" id="pdf">
+      <h2>PDF Merge</h2>
+      <p>Combine several PDFs into one. Reorder them before merging.</p>
+      <label class="drop" id="p-drop">
+        <input type="file" id="p-file" accept="application/pdf" multiple>
+        <strong>Tap to choose PDF files</strong><br>or drag and drop them here
+      </label>
+      <ul class="files" id="p-list"></ul>
+      <div class="row">
+        <button class="btn primary" id="p-merge" disabled>Merge PDFs</button>
+        <button class="btn" id="p-clear">Clear all</button>
+      </div>
+      <div class="msg" id="p-msg" role="status"></div>
+    </section>
+    <!-- IMAGE TO PDF -->
+    <section class="panel" id="imgpdf">
+      <h2>Image to PDF</h2>
+      <p>Turn photos or scans into one PDF. Arrange the pages before you create it.</p>
+      <label class="drop" id="ip-drop">
+        <input type="file" id="ip-file" accept="image/*" multiple>
+        <strong>Tap to choose images</strong><br>or drag and drop them here
+      </label>
+      <ul class="files" id="ip-list"></ul>
+      <div class="split">
+        <div>
+          <label for="ip-size">Page size</label>
+          <select id="ip-size">
+            <option value="a4" selected>A4 (image fits the page)</option>
+            <option value="fit">Same shape as the image</option>
+          </select>
+        </div>
+        <div>
+          <label for="ip-margin">Margin</label>
+          <select id="ip-margin">
+            <option value="0">None</option>
+            <option value="20" selected>Small</option>
+            <option value="40">Large</option>
+          </select>
+        </div>
+      </div>
+      <div class="row">
+        <button class="btn primary" id="ip-make" disabled>Create PDF</button>
+        <button class="btn" id="ip-clear">Clear all</button>
+      </div>
+      <div class="msg" id="ip-msg" role="status"></div>
+    </section>
+
+    <!-- PASSWORD GENERATOR -->
+    <section class="panel" id="password">
+      <h2>Password Generator</h2>
+      <p>Create strong random passwords. Everything happens in your browser. Nothing you type is sent anywhere.</p>
+      <label for="pw-out">Your password (generate one, or type your own to check it)</label>
+      <div class="pwbox">
+        <input type="text" id="pw-out" spellcheck="false" autocomplete="off" placeholder="Type a password here…">
+        <button class="btn" id="pw-eye" type="button">Hide</button>
+        <button class="btn" id="pw-copy" type="button">Copy</button>
+      </div>
+      <div class="meter"><span id="pw-bar"></span></div>
+      <div class="hint" id="pw-strength" style="margin-top:6px;min-height:1.5em"></div>
+      <div class="checks" id="pw-checks"></div>
+      <div class="msg err" id="pw-warn" style="margin-top:8px"></div>
+      <div class="hint" style="font-size:.85rem">Rough estimates only. Tip: a passphrase of 4 or more random words is long, hard to guess and easy to remember.</div>
+      <label for="pw-len">Length: <span id="pw-lenv">16</span></label>
+      <input type="range" id="pw-len" min="8" max="64" value="16" style="width:100%">
+      <div class="opts">
+        <label><input type="checkbox" id="pw-lower" checked> Lowercase (a-z)</label>
+        <label><input type="checkbox" id="pw-upper" checked> Uppercase (A-Z)</label>
+        <label><input type="checkbox" id="pw-num" checked> Numbers (0-9)</label>
+        <label><input type="checkbox" id="pw-sym" checked> Symbols (!@#$)</label>
+        <label><input type="checkbox" id="pw-amb"> Avoid look-alikes (0 O 1 l I)</label>
+      </div>
+      <div class="row"><button class="btn primary" id="pw-gen">Generate new password</button></div>
+    </section>
+
+    <!-- CONTACT -->
+    <section class="panel" id="contact">
+      <h2>Contact Us</h2>
+      <p>Found a problem or want to leave a review? Send me a message and I will reply by email.</p>
+      <div class="cards">
+        <div class="cc"><span class="ci">👤</span><span><small>Name</small><br><b>Muhammad Zaeem Babar</b></span></div>
+        <a class="cc" href="mailto:zaeembabar029@gmail.com"><span class="ci">✉️</span><span><small>Email</small><br><b>zaeembabar029@gmail.com</b></span></a>
+        <a class="cc" href="tel:+923317381529"><span class="ci">📞</span><span><small>Phone / WhatsApp</small><br><b>+92-331-7381529</b></span></a>
+      </div>
+      <form id="c-form" novalidate>
+        <div class="split">
+          <div><label for="c-name">Your name</label><input type="text" id="c-name" name="name" maxlength="80" autocomplete="name" required></div>
+          <div><label for="c-email">Your email</label><input type="email" id="c-email" name="email" maxlength="120" autocomplete="email" required></div>
+        </div>
+        <label for="c-type">This is a</label>
+        <select id="c-type" name="type">
+          <option>Problem</option>
+          <option>Review</option>
+          <option>Suggestion</option>
+          <option>Other</option>
+        </select>
+        <label for="c-text">Message</label>
+        <textarea id="c-text" name="message" maxlength="4000" style="min-height:150px" placeholder="Write your message here…" required></textarea>
+        <input type="text" name="website" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true">
+        <div class="row"><button class="btn primary" id="c-send" type="submit">Send message</button></div>
+        <div class="msg" id="c-msg" role="status"></div>
+      </form>
+    </section>
+  </main>
+</div>
+
+<footer>© <span id="yr"></span> Benchtool. This website is made by <strong>Muhammad Zaeem Babar</strong>.</footer>
+<div id="toast" role="status"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf-lib/1.17.1/pdf-lib.min.js"></script>
+<script>
+const $ = s => document.querySelector(s);
+const $$ = s => [...document.querySelectorAll(s)];
+$('#yr').textContent = new Date().getFullYear();
+
+function toast(t){const e=$('#toast');e.textContent=t;e.classList.add('show');clearTimeout(toast.t);toast.t=setTimeout(()=>e.classList.remove('show'),1800)}
+async function copy(text){
+  if(!text){toast('Nothing to copy');return}
+  try{await navigator.clipboard.writeText(text);toast('Copied!')}catch{toast('Copy failed')}
+}
+let serverOK=false;
+fetch('/api/health').then(r=>r.ok?r.json():null).then(j=>{serverOK=!!(j&&j.ok)}).catch(()=>{});
+async function api(path,fd){
+  const r=await fetch(path,{method:'POST',body:fd});
+  if(!r.ok){let m='Server error';try{m=(await r.json()).error||m}catch{}throw new Error(m)}
+  return r.blob();
+}
+const fmtSize = b => b<1024 ? b+' B' : b<1048576 ? (b/1024).toFixed(1)+' KB' : (b/1048576).toFixed(2)+' MB';
+
+/* ---------- Tabs, search, URL hash ---------- */
+function openTool(id){
+  if(!id||!/^[a-z]+$/.test(id)||!document.getElementById(id)) id='words';
+  $$('.panel').forEach(p=>p.classList.toggle('on',p.id===id));
+  $$('.tab').forEach(t=>t.setAttribute('aria-selected',t.dataset.tool===id));
+  try{history.replaceState(null,'','#'+id)}catch{}
+  const on=$('.tab[aria-selected="true"]');if(on)on.scrollIntoView({inline:'center',block:'nearest'});
+}
+$$('.tab').forEach(t=>t.addEventListener('click',()=>openTool(t.dataset.tool)));
+const root=document.documentElement, themeBtn=$('#theme');
+function setTheme(t){root.dataset.theme=t;themeBtn.textContent=t==='dark'?'☀️':'🌙'}
+setTheme('light'); // the site always opens in the light theme
+themeBtn.onclick=()=>setTheme(root.dataset.theme==='dark'?'light':'dark');
+openTool(location.hash.slice(1));
+
+/* ---------- Word Counter ---------- */
+const wIn=$('#w-in');
+function countWords(){
+  const t=wIn.value, words=t.trim()?t.trim().split(/\s+/).length:0;
+  $('#w-words').textContent=words;
+  $('#w-chars').textContent=t.length;
+  $('#w-nospace').textContent=t.replace(/\s/g,'').length;
+  $('#w-sent').textContent=(t.match(/[^.!?۔؟]+[.!?۔؟]+/g)||[]).length;
+  $('#w-para').textContent=t.split(/\n\s*\n/).filter(p=>p.trim()).length;
+  $('#w-read').textContent=words?Math.max(1,Math.ceil(words/200))+' min':'0 min';
+}
+wIn.addEventListener('input',countWords);
+$('#w-copy').onclick=()=>copy(wIn.value);
+$('#w-clear').onclick=()=>{wIn.value='';countWords();wIn.focus()};
+
+/* ---------- JSON Formatter ---------- */
+const jIn=$('#j-in'), jMsg=$('#j-msg');
+function jsonRun(indent){
+  const v=jIn.value.trim();
+  if(!v){jMsg.className='msg err';jMsg.textContent='Paste some JSON first.';return}
+  try{
+    jIn.value=JSON.stringify(JSON.parse(v),null,indent);
+    jMsg.className='msg ok';jMsg.textContent='✓ Valid JSON';
+  }catch(e){
+    jMsg.className='msg err';jMsg.textContent='Invalid JSON: '+e.message;
+  }
+}
+$('#j-format').onclick=()=>jsonRun(2);
+$('#j-min').onclick=()=>jsonRun(0);
+$('#j-copy').onclick=()=>copy(jIn.value);
+$('#j-clear').onclick=()=>{jIn.value='';jMsg.textContent='';jIn.focus()};
+
+/* ---------- QR Code ---------- */
+const qOut=$('#qr-out'), qMsg=$('#q-msg');
+function makeQR(){
+  const v=$('#q-in').value.trim();
+  if(!v){qMsg.className='msg err';qMsg.textContent='Enter a link or some text.';return}
+  if(typeof QRCode==='undefined'){qMsg.className='msg err';qMsg.textContent='QR library failed to load. Check your internet.';return}
+  qOut.innerHTML='';qMsg.textContent='';
+  const s=+$('#q-size').value;
+  new QRCode(qOut,{text:v,width:s,height:s,correctLevel:QRCode.CorrectLevel.M});
+  $('#q-dl').disabled=false;
+}
+$('#q-make').onclick=makeQR;
+$('#q-in').addEventListener('keydown',e=>{if(e.key==='Enter')makeQR()});
+$('#q-dl').onclick=()=>{
+  const c=qOut.querySelector('canvas');if(!c)return;
+  const a=document.createElement('a');a.href=c.toDataURL('image/png');a.download='qr-code.png';a.click();
+};
+
+/* ---------- Image Compressor ---------- */
+let srcImg=null, srcFile=null;
+const drop=$('#drop'), fileIn=$('#i-file');
+function loadFile(f){
+  if(!f||!f.type.startsWith('image/')){toast('Please choose an image file');return}
+  srcFile=f;
+  const img=new Image();
+  img.onload=()=>{srcImg=img;$('#i-res').style.display='block';compress()};
+  img.src=URL.createObjectURL(f);
+}
+function showCompressed(b){
+  const url=URL.createObjectURL(b);
+  $('#i-prev').src=url;$('#i-dl').href=url;
+  $('#i-dl').download=srcFile.name.replace(/\.[^.]+$/,'')+'-compressed.jpg';
+  $('#i-before').textContent=fmtSize(srcFile.size);
+  $('#i-after').textContent=fmtSize(b.size);
+  const saved=Math.round((1-b.size/srcFile.size)*100);
+  $('#i-save').textContent=saved>0?saved+'%':'0%';
+}
+let cTimer;
+function compress(){
+  if(!srcImg)return;
+  const maxW=+$('#i-w').value, q=+$('#i-q').value/100;
+  if(serverOK){
+    clearTimeout(cTimer);
+    cTimer=setTimeout(()=>{
+      const fd=new FormData();fd.append('file',srcFile);fd.append('quality',$('#i-q').value);fd.append('maxWidth',maxW);
+      api('/api/compress-image',fd).then(showCompressed).catch(e=>toast(e.message));
+    },300);
+    return;
+  }
+  const scale=maxW&&srcImg.width>maxW?maxW/srcImg.width:1;
+  const c=document.createElement('canvas');
+  c.width=Math.round(srcImg.width*scale);c.height=Math.round(srcImg.height*scale);
+  const x=c.getContext('2d');x.fillStyle='#fff';x.fillRect(0,0,c.width,c.height);
+  x.drawImage(srcImg,0,0,c.width,c.height);
+  c.toBlob(showCompressed,'image/jpeg',q);
+}
+fileIn.addEventListener('change',e=>loadFile(e.target.files[0]));
+['dragover','dragenter'].forEach(ev=>drop.addEventListener(ev,e=>{e.preventDefault();drop.classList.add('over')}));
+['dragleave','drop'].forEach(ev=>drop.addEventListener(ev,e=>{e.preventDefault();drop.classList.remove('over')}));
+drop.addEventListener('drop',e=>loadFile(e.dataTransfer.files[0]));
+$('#i-q').addEventListener('input',e=>{$('#i-qv').textContent=e.target.value;compress()});
+$('#i-w').addEventListener('change',compress);
+
+/* ---------- Image Resizer ---------- */
+let rImg=null, rFile=null, rRatio=1;
+const rDrop=$('#r-drop');
+function rLoad(f){
+  if(!f||!f.type.startsWith('image/')){toast('Please choose an image file');return}
+  rFile=f;
+  const img=new Image();
+  img.onload=()=>{
+    rImg=img;rRatio=img.height/img.width;
+    $('#r-w').value=img.width;$('#r-h').value=img.height;
+    $('#r-orig').textContent=img.width+' × '+img.height;
+    $('#r-res').style.display='block';rRun();
+  };
+  img.src=URL.createObjectURL(f);
+}
+function showResized(b,w,h,ext){
+  const url=URL.createObjectURL(b);
+  $('#r-prev').src=url;$('#r-dl').href=url;
+  $('#r-dl').download=rFile.name.replace(/\.[^.]+$/,'')+'-'+w+'x'+h+'.'+ext;
+  $('#r-new').textContent=w+' × '+h;
+  $('#r-fs').textContent=fmtSize(b.size);
+}
+let rTimer;
+function rRun(){
+  if(!rImg)return;
+  const w=Math.min(8000,Math.max(1,+$('#r-w').value||1)), h=Math.min(8000,Math.max(1,+$('#r-h').value||1));
+  const type=$('#r-fmt').value, ext={'image/png':'png','image/jpeg':'jpg','image/webp':'webp'}[type];
+  if(serverOK){
+    clearTimeout(rTimer);
+    rTimer=setTimeout(()=>{
+      const fd=new FormData();fd.append('file',rFile);fd.append('width',w);fd.append('height',h);fd.append('format',type.split('/')[1]);
+      api('/api/resize-image',fd).then(b=>showResized(b,w,h,ext)).catch(e=>toast(e.message));
+    },300);
+    return;
+  }
+  const c=document.createElement('canvas');c.width=w;c.height=h;
+  const x=c.getContext('2d');
+  if(type==='image/jpeg'){x.fillStyle='#fff';x.fillRect(0,0,w,h)}
+  x.imageSmoothingQuality='high';x.drawImage(rImg,0,0,w,h);
+  c.toBlob(b=>showResized(b,w,h,ext),type,0.92);
+}
+$('#r-w').addEventListener('input',e=>{if($('#r-lock').checked&&e.target.value)$('#r-h').value=Math.round(e.target.value*rRatio);rRun()});
+$('#r-h').addEventListener('input',e=>{if($('#r-lock').checked&&e.target.value)$('#r-w').value=Math.round(e.target.value/rRatio);rRun()});
+$('#r-fmt').addEventListener('change',rRun);
+$('#r-file').addEventListener('change',e=>rLoad(e.target.files[0]));
+['dragover','dragenter'].forEach(ev=>rDrop.addEventListener(ev,e=>{e.preventDefault();rDrop.classList.add('over')}));
+['dragleave','drop'].forEach(ev=>rDrop.addEventListener(ev,e=>{e.preventDefault();rDrop.classList.remove('over')}));
+rDrop.addEventListener('drop',e=>rLoad(e.dataTransfer.files[0]));
+
+/* ---------- PDF Merge ---------- */
+let pdfs=[];
+const pList=$('#p-list'), pMsg=$('#p-msg'), pDrop=$('#p-drop');
+function pAdd(files){
+  const ok=[...files].filter(f=>f.type==='application/pdf'||/\.pdf$/i.test(f.name));
+  if(ok.length<files.length)toast('Only PDF files were added');
+  pdfs.push(...ok);pRender();
+}
+function pRender(){
+  pList.innerHTML='';
+  pdfs.forEach((f,i)=>{
+    const li=document.createElement('li');
+    li.innerHTML='<span class="nm"></span><small></small><button data-a="up" aria-label="Move up">↑</button><button data-a="down" aria-label="Move down">↓</button><button data-a="del" aria-label="Remove">✕</button>';
+    li.querySelector('.nm').textContent=(i+1)+'. '+f.name;
+    li.querySelector('small').textContent=fmtSize(f.size);
+    li.dataset.i=i;pList.appendChild(li);
+  });
+  $('#p-merge').disabled=pdfs.length<2;
+  pMsg.textContent=pdfs.length===1?'Add at least one more PDF.':'';pMsg.className='msg';
+}
+pList.addEventListener('click',e=>{
+  const b=e.target.closest('button');if(!b)return;
+  const i=+b.parentElement.dataset.i, a=b.dataset.a;
+  if(a==='del')pdfs.splice(i,1);
+  if(a==='up'&&i>0)[pdfs[i-1],pdfs[i]]=[pdfs[i],pdfs[i-1]];
+  if(a==='down'&&i<pdfs.length-1)[pdfs[i+1],pdfs[i]]=[pdfs[i],pdfs[i+1]];
+  pRender();
+});
+$('#p-file').addEventListener('change',e=>{pAdd(e.target.files);e.target.value=''});
+['dragover','dragenter'].forEach(ev=>pDrop.addEventListener(ev,e=>{e.preventDefault();pDrop.classList.add('over')}));
+['dragleave','drop'].forEach(ev=>pDrop.addEventListener(ev,e=>{e.preventDefault();pDrop.classList.remove('over')}));
+pDrop.addEventListener('drop',e=>pAdd(e.dataTransfer.files));
+$('#p-clear').onclick=()=>{pdfs=[];pRender()};
+$('#p-merge').onclick=async()=>{
+  if(!serverOK&&typeof PDFLib==='undefined'){pMsg.className='msg err';pMsg.textContent='PDF library failed to load. Check your internet.';return}
+  const btn=$('#p-merge');btn.disabled=true;pMsg.className='msg';pMsg.textContent='Merging…';
+  try{
+    let blob;
+    if(serverOK){
+      const fd=new FormData();pdfs.forEach(f=>fd.append('files',f));
+      blob=await api('/api/merge-pdf',fd);
+    }else{
+      const out=await PDFLib.PDFDocument.create();
+      for(const f of pdfs){
+        const src=await PDFLib.PDFDocument.load(await f.arrayBuffer());
+        (await out.copyPages(src,src.getPageIndices())).forEach(p=>out.addPage(p));
+      }
+      blob=new Blob([await out.save()],{type:'application/pdf'});
+    }
+    const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='merged.pdf';a.click();
+    pMsg.className='msg ok';pMsg.textContent='✓ Done! merged.pdf ('+fmtSize(blob.size)+') is downloading.';
+  }catch(err){
+    pMsg.className='msg err';pMsg.textContent='Could not merge. One of the files may be password-protected or damaged.';
+  }
+  btn.disabled=pdfs.length<2;
+};
+/* ---------- Image to PDF ---------- */
+let ipFiles=[], ipUrls=[];
+const ipList=$('#ip-list'), ipMsg=$('#ip-msg'), ipDrop=$('#ip-drop');
+function ipAdd(files){
+  const ok=[...files].filter(f=>f.type.startsWith('image/'));
+  if(ok.length<files.length)toast('Only image files were added');
+  ipFiles.push(...ok);ipRender();
+}
+function ipRender(){
+  ipUrls.forEach(u=>URL.revokeObjectURL(u));ipUrls=[];ipList.innerHTML='';
+  ipFiles.forEach((f,i)=>{
+    const u=URL.createObjectURL(f);ipUrls.push(u);
+    const li=document.createElement('li');
+    li.innerHTML='<img alt=""><span class="nm"></span><small></small><button data-a="up" aria-label="Move up">↑</button><button data-a="down" aria-label="Move down">↓</button><button data-a="del" aria-label="Remove">✕</button>';
+    li.querySelector('img').src=u;
+    li.querySelector('.nm').textContent=(i+1)+'. '+f.name;
+    li.querySelector('small').textContent=fmtSize(f.size);
+    li.dataset.i=i;ipList.appendChild(li);
+  });
+  $('#ip-make').disabled=!ipFiles.length;
+  ipMsg.textContent='';ipMsg.className='msg';
+}
+ipList.addEventListener('click',e=>{
+  const b=e.target.closest('button');if(!b)return;
+  const i=+b.parentElement.dataset.i, a=b.dataset.a;
+  if(a==='del')ipFiles.splice(i,1);
+  if(a==='up'&&i>0)[ipFiles[i-1],ipFiles[i]]=[ipFiles[i],ipFiles[i-1]];
+  if(a==='down'&&i<ipFiles.length-1)[ipFiles[i+1],ipFiles[i]]=[ipFiles[i],ipFiles[i+1]];
+  ipRender();
+});
+$('#ip-file').addEventListener('change',e=>{ipAdd(e.target.files);e.target.value=''});
+['dragover','dragenter'].forEach(ev=>ipDrop.addEventListener(ev,e=>{e.preventDefault();ipDrop.classList.add('over')}));
+['dragleave','drop'].forEach(ev=>ipDrop.addEventListener(ev,e=>{e.preventDefault();ipDrop.classList.remove('over')}));
+ipDrop.addEventListener('drop',e=>ipAdd(e.dataTransfer.files));
+$('#ip-clear').onclick=()=>{ipFiles=[];ipRender()};
+function ipLoad(f){
+  return new Promise((res,rej)=>{
+    const i=new Image(),u=URL.createObjectURL(f);
+    i.onload=()=>{URL.revokeObjectURL(u);res(i)};
+    i.onerror=()=>{URL.revokeObjectURL(u);rej(new Error('bad image'))};
+    i.src=u;
+  });
+}
+async function ipPrepare(f){
+  const img=await ipLoad(f), MAX=3000;
+  const s=Math.min(1,MAX/Math.max(img.naturalWidth,img.naturalHeight));
+  const w=Math.max(1,Math.round(img.naturalWidth*s)), h=Math.max(1,Math.round(img.naturalHeight*s));
+  const c=document.createElement('canvas');c.width=w;c.height=h;
+  const x=c.getContext('2d'),png=f.type==='image/png';
+  if(!png){x.fillStyle='#fff';x.fillRect(0,0,w,h)}
+  x.drawImage(img,0,0,w,h);
+  const blob=await new Promise(r=>c.toBlob(r,png?'image/png':'image/jpeg',0.92));
+  return {bytes:await blob.arrayBuffer(),png,w,h};
+}
+$('#ip-make').onclick=async()=>{
+  if(typeof PDFLib==='undefined'){ipMsg.className='msg err';ipMsg.textContent='PDF library failed to load. Check your internet.';return}
+  const btn=$('#ip-make');btn.disabled=true;ipMsg.className='msg';ipMsg.textContent='Creating PDF…';
+  try{
+    const doc=await PDFLib.PDFDocument.create(), fit=$('#ip-size').value==='fit', m=+$('#ip-margin').value;
+    for(const f of ipFiles){
+      const {bytes,png,w,h}=await ipPrepare(f);
+      const img=png?await doc.embedPng(bytes):await doc.embedJpg(bytes);
+      let dw,dh,pw,ph;
+      if(fit){const k=Math.min(1,842/Math.max(w,h));dw=w*k;dh=h*k;pw=dw+2*m;ph=dh+2*m}
+      else{[pw,ph]=w>h?[841.89,595.28]:[595.28,841.89];const k=Math.min((pw-2*m)/w,(ph-2*m)/h);dw=w*k;dh=h*k}
+      doc.addPage([pw,ph]).drawImage(img,{x:(pw-dw)/2,y:(ph-dh)/2,width:dw,height:dh});
+    }
+    const blob=new Blob([await doc.save()],{type:'application/pdf'});
+    const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='images.pdf';a.click();
+    ipMsg.className='msg ok';ipMsg.textContent='✓ Done! images.pdf ('+fmtSize(blob.size)+') is downloading.';
+  }catch(err){
+    ipMsg.className='msg err';ipMsg.textContent='Could not create the PDF. One of the images may be damaged.';
+  }
+  btn.disabled=!ipFiles.length;
+};
+
+/* ---------- Password Generator ---------- */
+const PW={lower:'abcdefghijklmnopqrstuvwxyz',upper:'ABCDEFGHIJKLMNOPQRSTUVWXYZ',num:'0123456789',sym:'!@#$%^&*()-_=+[]{};:,.?'};
+function pwRand(n){ // unbiased random number from 0 to n-1
+  const max=Math.floor(0x100000000/n)*n, a=new Uint32Array(1);
+  do{crypto.getRandomValues(a)}while(a[0]>=max);
+  return a[0]%n;
+}
+function makePw(){
+  const len=+$('#pw-len').value, amb=$('#pw-amb').checked;
+  $('#pw-lenv').textContent=len;
+  const sets=[['pw-lower','lower'],['pw-upper','upper'],['pw-num','num'],['pw-sym','sym']]
+    .filter(([id])=>$('#'+id).checked).map(([,k])=>amb?PW[k].replace(/[0O1lI]/g,''):PW[k]);
+  const bar=$('#pw-bar'),txt=$('#pw-strength');
+  if(!sets.length){$('#pw-out').value='';showPw(false);txt.textContent='Select at least one type of character.';return}
+  const pool=sets.join(''), out=sets.map(s=>s[pwRand(s.length)]);
+  while(out.length<len)out.push(pool[pwRand(pool.length)]);
+  for(let i=out.length-1;i>0;i--){const j=pwRand(i+1);[out[i],out[j]]=[out[j],out[i]]}
+  $('#pw-out').value=out.join('');
+  showPw(false);
+}
+
+const PW_COMMON=['password','123456','qwerty','iloveyou','welcome','admin','letmein','monkey','dragon','football','pakistan','abc123','111111','000000','login','master','shadow','sunshine'];
+function pwTime(bits){
+  let s=Math.pow(2,bits-1)/1e10; // average time at 10 billion guesses per second
+  if(s<1)return 'less than a second';
+  const steps=[['seconds',60],['minutes',60],['hours',24],['days',365],['years',1000],['thousand years',1000],['million years',1000]];
+  for(const [name,div] of steps){if(s<div)return Math.round(s)+' '+name;s/=div}
+  return 'billions of years';
+}
+function pwRate(pw,typed){
+  const has={lower:/[a-z]/.test(pw),upper:/[A-Z]/.test(pw),num:/[0-9]/.test(pw),sym:/[^A-Za-z0-9]/.test(pw)};
+  const pool=(has.lower?26:0)+(has.upper?26:0)+(has.num?10:0)+(has.sym?33:0);
+  let bits=pw.length*Math.log2(pool||1);
+  const warns=[];
+  if(typed&&pw){
+    const low=pw.toLowerCase();
+    const leet=low.replace(/[@4]/g,'a').replace(/3/g,'e').replace(/[01!|]/g,m=>m==='0'?'o':'i').replace(/[$5]/g,'s').replace(/7/g,'t');
+    if(PW_COMMON.some(w=>low.includes(w)||leet.includes(w))){bits=Math.min(bits,22);warns.push('Contains a very common password or word. Attackers try these first.')}
+    const uniq=new Set(pw).size;
+    if(/(.)\1{2,}/.test(pw)||uniq<pw.length*0.45){bits=Math.min(bits*0.75,(uniq+2)*Math.log2(pool||1));warns.push('Too many repeated characters.')}
+    if(/^[A-Za-z]+[!@#$%^&*._-]?(19|20)\d{2}[!@#$%^&*._-]?$/.test(pw)){bits=Math.min(bits,30);warns.push('A word followed by a year is a very common pattern.')}
+    let seq=false;
+    for(let i=0;i<pw.length-2;i++){
+      const a=low.charCodeAt(i),b=low.charCodeAt(i+1),c=low.charCodeAt(i+2);
+      if((b-a===1&&c-b===1)||(a-b===1&&b-c===1)){seq=true;break}
+    }
+    if(seq||/qwer|asdf|zxcv/.test(low)){bits*=0.75;warns.push('Has an easy pattern such as abc, 123 or qwer.')}
+    if(pw.length<8)warns.push('Too short. Use at least 12 characters.');
+  }
+  const [label,col]=bits<28?['Very weak','var(--err)']:bits<40?['Weak','var(--err)']:bits<60?['Fair','#f5b84b']:bits<80?['Strong','var(--ok)']:['Very strong','var(--ok)'];
+  return {has,bits,label,col,warns};
+}
+function showPw(typed){
+  const pw=$('#pw-out').value, bar=$('#pw-bar'), txt=$('#pw-strength');
+  const r=pwRate(pw,typed);
+  const checks=$('#pw-checks');checks.innerHTML='';
+  [['12+ characters',pw.length>=12],['Lowercase',r.has.lower],['Uppercase',r.has.upper],['Number',r.has.num],['Symbol',r.has.sym]].forEach(([t,ok])=>{
+    const s=document.createElement('span');s.className='chk'+(ok?' ok':'');s.textContent=(ok?'✓ ':'')+t;checks.appendChild(s);
+  });
+  $('#pw-warn').textContent=r.warns.join(' ');
+  if(!pw){bar.style.width='0';txt.textContent='Type a password to check how strong it is, or press Generate.';return}
+  bar.style.width=Math.min(100,r.bits)+'%';bar.style.background=r.col;
+  const t=pwTime(r.bits);
+  txt.textContent=r.label+' · about '+Math.round(r.bits)+' bits · could be cracked in '+(/^(less|billions)/.test(t)?t:'about '+t)+' (rough estimate)';
+}
+$('#pw-out').addEventListener('input',()=>showPw(true));
+$('#pw-eye').onclick=()=>{const i=$('#pw-out'),hide=i.type==='text';i.type=hide?'password':'text';$('#pw-eye').textContent=hide?'Show':'Hide'};
+$('#pw-gen').onclick=makePw;
+['#pw-len','#pw-lower','#pw-upper','#pw-num','#pw-sym','#pw-amb'].forEach(s=>$(s).addEventListener('input',makePw));
+$('#pw-copy').onclick=()=>copy($('#pw-out').value);
+makePw();
+
+/* ---------- Contact form ---------- */
+// Paste your Formspree form link here (looks like https://formspree.io/f/abcdwxyz).
+// When it is set, every message is delivered straight to your email - no server or password needed.
+const FORMSPREE_URL='';
+const cForm=$('#c-form'), cMsg=$('#c-msg');
+cForm.addEventListener('submit',async e=>{
+  e.preventDefault();
+  const d=Object.fromEntries(new FormData(cForm));
+  if(d.website)return; // hidden spam-trap field
+  d.name=(d.name||'').trim();d.email=(d.email||'').trim();d.message=(d.message||'').trim();
+  if(!d.name||!d.message){cMsg.className='msg err';cMsg.textContent='Please enter your name and message.';return}
+  if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(d.email)){cMsg.className='msg err';cMsg.textContent='Please enter a valid email address.';return}
+  const btn=$('#c-send');btn.disabled=true;cMsg.className='msg';cMsg.textContent='Sending…';
+  try{
+    if(FORMSPREE_URL){
+      const fr=await fetch(FORMSPREE_URL,{method:'POST',headers:{'Content-Type':'application/json','Accept':'application/json'},
+        body:JSON.stringify({name:d.name,email:d.email,type:d.type,message:d.message,_subject:'[Benchtool] '+d.type+' from '+d.name})});
+      if(!fr.ok)throw new Error('formspree failed');
+      cMsg.className='msg ok';cMsg.textContent='✓ Thank you! Your message has been sent.';cForm.reset();
+      btn.disabled=false;return;
+    }
+    if(!serverOK)throw new Error('no server');
+    const r=await fetch('/api/contact',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(d)});
+    const j=await r.json().catch(()=>({}));
+    if(r.ok){cMsg.className='msg ok';cMsg.textContent='✓ Thank you! Your message has been sent.';cForm.reset()}
+    else if(r.status===400||r.status===429){cMsg.className='msg err';cMsg.textContent=j.error||'Please check the form.'}
+    else throw new Error('server mail unavailable');
+  }catch{
+    const body='Name: '+d.name+'\nEmail: '+d.email+'\n\n'+d.message;
+    cMsg.className='msg';cMsg.textContent='Your email app will open. Press Send there to deliver your message.';
+    location.href='mailto:zaeembabar029@gmail.com?subject='+encodeURIComponent('[Benchtool] '+d.type)+'&body='+encodeURIComponent(body);
+  }
+  btn.disabled=false;
+});
+</script>
+</body>
+</html>
